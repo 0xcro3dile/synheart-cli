@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -10,6 +11,11 @@ import (
 	"github.com/synheart/synheart-cli/internal/scenario"
 )
 
+var (
+	doctorHost string
+	doctorPort int
+)
+
 var doctorCmd = &cobra.Command{
 	Use:   "doctor",
 	Short: "Check environment and print connection info",
@@ -17,81 +23,166 @@ var doctorCmd = &cobra.Command{
 	RunE:  runDoctor,
 }
 
+func init() {
+	doctorCmd.Flags().StringVar(&doctorHost, "host", "127.0.0.1", "Host to bind to")
+	doctorCmd.Flags().IntVar(&doctorPort, "port", 8787, "Port to check")
+}
+
 func runDoctor(cmd *cobra.Command, args []string) error {
-	fmt.Println("🏥 Synheart Environment Check")
+	out := cmd.OutOrStdout()
+
+	type doctorJSON struct {
+		GoVersion    string   `json:"go_version"`
+		OS           string   `json:"os"`
+		Arch         string   `json:"arch"`
+		ScenariosDir string   `json:"scenarios_dir"`
+		Scenarios    []string `json:"scenarios"`
+		Port         int      `json:"port"`
+		Host         string   `json:"host"`
+		PortFree     bool     `json:"port_free"`
+		WebSocketURL string   `json:"websocket_url"`
+	}
+
+	if globalOpts.Format == "text" {
+		if ui != nil {
+			ui.Header("Synheart doctor")
+			ui.Println()
+		} else {
+			fmt.Fprintln(out, "Synheart doctor")
+			fmt.Fprintln(out)
+		}
+	}
 
 	// Check Go version
-	fmt.Printf("Go Version:        %s\n", runtime.Version())
-	fmt.Printf("OS/Arch:           %s/%s\n\n", runtime.GOOS, runtime.GOARCH)
+	if globalOpts.Format == "text" {
+		if ui != nil {
+			ui.KV("Go", runtime.Version())
+			ui.KV("OS/Arch", fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH))
+			ui.Println()
+		} else {
+			fmt.Fprintf(out, "Go:      %s\n", runtime.Version())
+			fmt.Fprintf(out, "OS/Arch: %s/%s\n\n", runtime.GOOS, runtime.GOARCH)
+		}
+	}
 
 	// Check scenarios directory
 	scenariosDir := getScenarioDir()
+	scenarios := []string(nil)
 	if _, err := os.Stat(scenariosDir); err == nil {
-		fmt.Printf("✅ Scenarios directory found: %s\n", scenariosDir)
-
 		// Count scenarios
 		registry := scenario.NewRegistry()
 		if err := registry.LoadFromDir(scenariosDir); err == nil {
-			scenarios := registry.List()
-			fmt.Printf("   Found %d scenarios: %v\n\n", len(scenarios), scenarios)
+			scenarios = registry.List()
+		}
+		if globalOpts.Format == "text" {
+			if ui != nil {
+				ui.Successf("scenarios directory found: %s", scenariosDir)
+				if len(scenarios) > 0 {
+					ui.KV("Scenarios", scenarios)
+				}
+				ui.Println()
+			} else {
+				fmt.Fprintf(out, "Scenarios directory: %s\n", scenariosDir)
+				if len(scenarios) > 0 {
+					fmt.Fprintf(out, "Scenarios: %v\n", scenarios)
+				}
+				fmt.Fprintln(out)
+			}
 		}
 	} else {
-		fmt.Printf("❌ Scenarios directory not found: %s\n\n", scenariosDir)
+		if globalOpts.Format == "text" {
+			if ui != nil {
+				ui.Errorf("scenarios directory not found: %s", scenariosDir)
+				ui.Println()
+			} else {
+				fmt.Fprintf(out, "Scenarios directory missing: %s\n\n", scenariosDir)
+			}
+		}
 	}
 
 	// Check default port availability
-	defaultPort := 8787
-	if isPortAvailable(defaultPort) {
-		fmt.Printf("✅ Default port %d is available\n\n", defaultPort)
-	} else {
-		fmt.Printf("⚠️  Default port %d is in use\n", defaultPort)
-		fmt.Printf("   Use --port flag to specify a different port\n\n")
+	portFree := isPortAvailable(doctorHost, doctorPort)
+	wsURL := fmt.Sprintf("ws://%s:%d/hsi", doctorHost, doctorPort)
+	if globalOpts.Format == "text" {
+		if portFree {
+			if ui != nil {
+				ui.Successf("port %d is available on %s", doctorPort, doctorHost)
+				ui.KV("WebSocket", wsURL)
+				ui.Println()
+			} else {
+				fmt.Fprintf(out, "Port %d is available on %s\n", doctorPort, doctorHost)
+				fmt.Fprintf(out, "WebSocket: %s\n\n", wsURL)
+			}
+		} else {
+			if ui != nil {
+				ui.Warnf("port %d is in use on %s", doctorPort, doctorHost)
+				ui.KV("WebSocket", wsURL)
+				ui.Println()
+			} else {
+				fmt.Fprintf(out, "Port %d is in use on %s\n", doctorPort, doctorHost)
+				fmt.Fprintf(out, "WebSocket: %s\n\n", wsURL)
+			}
+		}
+
+		if ui != nil {
+			ui.Section("Connection examples")
+		} else {
+			fmt.Fprintln(out, "Connection examples:")
+		}
+		fmt.Fprintln(out)
+
+		fmt.Fprintln(out, "JavaScript/Node.js:")
+		fmt.Fprintf(out, "  const ws = new WebSocket('%s');\n", wsURL)
+		fmt.Fprintln(out, "  ws.onmessage = (event) => {")
+		fmt.Fprintln(out, "    const data = JSON.parse(event.data);")
+		fmt.Fprintln(out, "    console.log(data);")
+		fmt.Fprintln(out, "  };")
+		fmt.Fprintln(out)
+
+		fmt.Fprintln(out, "Python:")
+		fmt.Fprintln(out, "  import websocket")
+		fmt.Fprintln(out, "  import json")
+		fmt.Fprintln(out, "  ws = websocket.WebSocket()")
+		fmt.Fprintf(out, "  ws.connect('%s')\n", wsURL)
+		fmt.Fprintln(out, "  while True:")
+		fmt.Fprintln(out, "    data = json.loads(ws.recv())")
+		fmt.Fprintln(out, "    print(data)")
+		fmt.Fprintln(out)
+
+		fmt.Fprintln(out, "Go:")
+		fmt.Fprintf(out, "  conn, _, err := websocket.DefaultDialer.Dial(%q, nil)\n", wsURL)
+		fmt.Fprintln(out, "  for {")
+		fmt.Fprintln(out, "    _, message, err := conn.ReadMessage()")
+		fmt.Fprintln(out, "    // decode message into your Event type")
+		fmt.Fprintln(out, "    _ = message")
+		fmt.Fprintln(out, "    _ = err")
+		fmt.Fprintln(out, "  }")
+		fmt.Fprintln(out)
+
+		return nil
 	}
 
-	// Print connection examples
-	fmt.Println("📡 Connection Examples:")
-	fmt.Println()
-
-	fmt.Println("JavaScript/Node.js:")
-	fmt.Println("  const ws = new WebSocket('ws://localhost:8787/hsi');")
-	fmt.Println("  ws.onmessage = (event) => {")
-	fmt.Println("    const data = JSON.parse(event.data);")
-	fmt.Println("    console.log(data);")
-	fmt.Println("  };")
-	fmt.Println()
-
-	fmt.Println("Python:")
-	fmt.Println("  import websocket")
-	fmt.Println("  import json")
-	fmt.Println("  ws = websocket.WebSocket()")
-	fmt.Println("  ws.connect('ws://localhost:8787/hsi')")
-	fmt.Println("  while True:")
-	fmt.Println("    data = json.loads(ws.recv())")
-	fmt.Println("    print(data)")
-	fmt.Println()
-
-	fmt.Println("Go:")
-	fmt.Println("  conn, _, err := websocket.DefaultDialer.Dial(\"ws://localhost:8787/hsi\", nil)")
-	fmt.Println("  for {")
-	fmt.Println("    _, message, err := conn.ReadMessage()")
-	fmt.Println("    var event Event")
-	fmt.Println("    json.Unmarshal(message, &event)")
-	fmt.Println("  }")
-	fmt.Println()
-
-	fmt.Println("Rust:")
-	fmt.Println("  let (mut socket, _) = connect(\"ws://localhost:8787/hsi\").await?;")
-	fmt.Println("  while let Some(msg) = socket.next().await {")
-	fmt.Println("    let event: Event = serde_json::from_str(&msg?.to_string())?;")
-	fmt.Println("  }")
-	fmt.Println()
-
-	fmt.Println("✅ Environment check complete")
-	return nil
+	payload := doctorJSON{
+		GoVersion:    runtime.Version(),
+		OS:           runtime.GOOS,
+		Arch:         runtime.GOARCH,
+		ScenariosDir: scenariosDir,
+		Scenarios:    scenarios,
+		Host:         doctorHost,
+		Port:         doctorPort,
+		PortFree:     portFree,
+		WebSocketURL: wsURL,
+	}
+	if ui != nil {
+		return ui.PrintJSON(payload)
+	}
+	enc := json.NewEncoder(out)
+	enc.SetIndent("", "  ")
+	return enc.Encode(payload)
 }
 
-func isPortAvailable(port int) bool {
-	addr := fmt.Sprintf("127.0.0.1:%d", port)
+func isPortAvailable(host string, port int) bool {
+	addr := fmt.Sprintf("%s:%d", host, port)
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		return false

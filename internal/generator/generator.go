@@ -25,11 +25,11 @@ type Generator struct {
 
 // Config holds generator configuration
 type Config struct {
-	Seed         int64
-	DefaultRate  time.Duration
-	SourceType   string
-	SourceID     string
-	SourceSide   *string
+	Seed        int64
+	DefaultRate time.Duration
+	SourceType  string
+	SourceID    string
+	SourceSide  *string
 }
 
 // NewGenerator creates a new event generator
@@ -44,9 +44,9 @@ func NewGenerator(engine *scenario.Engine, config Config) *Generator {
 	}
 
 	return &Generator{
-		engine:      engine,
-		rng:         rng,
-		runID:       uuid.New().String(),
+		engine: engine,
+		rng:    rng,
+		runID:  uuid.New().String(),
 		source: models.Source{
 			Type: config.SourceType,
 			ID:   config.SourceID,

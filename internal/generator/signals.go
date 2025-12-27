@@ -13,15 +13,15 @@ type SignalGenerator func(rng *rand.Rand, config *scenario.SignalConfig, elapsed
 // GetAllSignals returns all available signal generators
 func GetAllSignals() map[string]SignalGenerator {
 	return map[string]SignalGenerator{
-		"ppg.hr_bpm":          generateHeartRate,
-		"ppg.hrv_rmssd_ms":    generateHRV,
-		"accel.xyz_mps2":      generateAccel,
-		"gyro.xyz_rps":        generateGyro,
-		"temp.skin_c":         generateSkinTemp,
-		"eda.us":              generateEDA,
-		"screen.state":        generateScreenState,
-		"app.activity":        generateAppActivity,
-		"motion.activity":     generateMotionActivity,
+		"ppg.hr_bpm":       generateHeartRate,
+		"ppg.hrv_rmssd_ms": generateHRV,
+		"accel.xyz_mps2":   generateAccel,
+		"gyro.xyz_rps":     generateGyro,
+		"temp.skin_c":      generateSkinTemp,
+		"eda.us":           generateEDA,
+		"screen.state":     generateScreenState,
+		"app.activity":     generateAppActivity,
+		"motion.activity":  generateMotionActivity,
 	}
 }
 

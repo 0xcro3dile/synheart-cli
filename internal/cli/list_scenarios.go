@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 
@@ -12,7 +13,11 @@ var listScenariosCmd = &cobra.Command{
 	Use:   "list-scenarios",
 	Short: "List available scenarios",
 	Long:  `Lists all built-in scenarios with their descriptions.`,
-	RunE:  runListScenarios,
+	Aliases: []string{
+		"scenarios",
+		"ls",
+	},
+	RunE: runListScenarios,
 }
 
 func runListScenarios(cmd *cobra.Command, args []string) error {
@@ -24,8 +29,31 @@ func runListScenarios(cmd *cobra.Command, args []string) error {
 
 	scenarios := registry.ListWithDescriptions()
 	if len(scenarios) == 0 {
-		fmt.Println("No scenarios found")
+		fmt.Fprintln(cmd.OutOrStdout(), "No scenarios found")
 		return nil
+	}
+
+	if globalOpts.Format == "json" {
+		type row struct {
+			Name        string `json:"name"`
+			Description string `json:"description"`
+		}
+		names := make([]string, 0, len(scenarios))
+		for name := range scenarios {
+			names = append(names, name)
+		}
+		sort.Strings(names)
+		out := make([]row, 0, len(names))
+		for _, name := range names {
+			out = append(out, row{Name: name, Description: scenarios[name]})
+		}
+		// UI may be nil if called in tests; fall back to stdout encoder.
+		if ui != nil {
+			return ui.PrintJSON(out)
+		}
+		enc := json.NewEncoder(cmd.OutOrStdout())
+		enc.SetIndent("", "  ")
+		return enc.Encode(out)
 	}
 
 	// Sort by name
@@ -35,12 +63,17 @@ func runListScenarios(cmd *cobra.Command, args []string) error {
 	}
 	sort.Strings(names)
 
-	fmt.Println("Available scenarios:")
-	fmt.Println()
-	for _, name := range names {
-		fmt.Printf("  %-20s %s\n", name, scenarios[name])
+	if ui != nil {
+		ui.Header("Available scenarios")
+		ui.Println()
+	} else {
+		fmt.Fprintln(cmd.OutOrStdout(), "Available scenarios:")
+		fmt.Fprintln(cmd.OutOrStdout())
 	}
-	fmt.Println()
+	for _, name := range names {
+		fmt.Fprintf(cmd.OutOrStdout(), "  %-20s %s\n", name, scenarios[name])
+	}
+	fmt.Fprintln(cmd.OutOrStdout())
 
 	return nil
 }

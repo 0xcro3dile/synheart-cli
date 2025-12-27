@@ -7,8 +7,8 @@ import (
 
 func TestParseDuration(t *testing.T) {
 	tests := []struct {
-		input    string
-		expected time.Duration
+		input     string
+		expected  time.Duration
 		unlimited bool
 	}{
 		{"unlimited", 0, true},

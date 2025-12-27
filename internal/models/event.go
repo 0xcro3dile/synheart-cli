@@ -4,13 +4,13 @@ import "time"
 
 // Event represents an HSI-compatible event envelope
 type Event struct {
-	SchemaVersion string   `json:"schema_version"`
-	EventID       string   `json:"event_id"`
-	Timestamp     string   `json:"ts"`
-	Source        Source   `json:"source"`
-	Session       Session  `json:"session"`
-	Signal        Signal   `json:"signal"`
-	Meta          Meta     `json:"meta"`
+	SchemaVersion string  `json:"schema_version"`
+	EventID       string  `json:"event_id"`
+	Timestamp     string  `json:"ts"`
+	Source        Source  `json:"source"`
+	Session       Session `json:"session"`
+	Signal        Signal  `json:"signal"`
+	Meta          Meta    `json:"meta"`
 }
 
 // Source represents the origin of the sensor data

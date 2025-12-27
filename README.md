@@ -4,9 +4,12 @@
 
 [![License](https://img.shields.io/github/license/synheart/synheart-cli)](LICENSE)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/synheart/synheart-cli)](go.mod)
+[![CI](https://github.com/synheart/synheart-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/synheart/synheart-cli/actions/workflows/ci.yml)
 [![Latest Release](https://img.shields.io/github/v/release/synheart/synheart-cli)](https://github.com/synheart/synheart-cli/releases)
 
 Synheart CLI generates HSI-compatible sensor data streams that mimic phone + wearable sources, eliminating dependency on physical devices during development.
+
+Changelog: see [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Features
 
@@ -21,7 +24,7 @@ Synheart CLI generates HSI-compatible sensor data streams that mimic phone + wea
 
 ### Prerequisites
 
-- Go 1.19 or later
+- Go 1.24 or later
 
 ### Install Globally (Recommended)
 
@@ -55,6 +58,28 @@ source ~/.zshrc  # or ~/.bashrc
 synheart version
 ```
 
+### Shell Completion (Recommended)
+
+Generate and load completions for your shell:
+
+```bash
+# Zsh
+mkdir -p ~/.zsh/completions
+synheart completion zsh > ~/.zsh/completions/_synheart
+```
+
+```bash
+# Bash
+mkdir -p ~/.bash_completion.d
+synheart completion bash > ~/.bash_completion.d/synheart
+```
+
+Or let `make install` handle it:
+
+```bash
+make install INSTALL_COMPLETIONS=zsh
+```
+
 ### Build Locally (Development)
 
 To build without installing globally:
@@ -63,11 +88,26 @@ To build without installing globally:
 make build
 ```
 
+To build with release metadata (injects version + git commit into `synheart version`):
+
+```bash
+make build VERSION=0.0.1
+```
+
 The binary will be available at `bin/synheart`. Run it with:
 
 ```bash
 ./bin/synheart version
 ```
+
+## Global Flags
+
+These flags apply to most commands:
+
+- `--format text|json` (default: `text`) — JSON is supported by `version`, `doctor`, `mock list-scenarios`, and `mock describe`
+- `--no-color` — Disable colored output
+- `-q, --quiet` — Suppress non-essential output
+- `-v, --verbose` — Verbose logging
 
 ## Quick Start
 

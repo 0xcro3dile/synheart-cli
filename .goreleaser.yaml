@@ -1,0 +1,45 @@
+version: 2
+
+project_name: synheart
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: synheart
+    main: ./cmd/synheart/main.go
+    binary: synheart
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w
+      - -X github.com/synheart/synheart-cli/internal/cli.Version={{ .Version }}
+      - -X github.com/synheart/synheart-cli/internal/cli.Commit={{ .Commit }}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - format: tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  disable: false
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+

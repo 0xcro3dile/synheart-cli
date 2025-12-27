@@ -4,12 +4,12 @@ import "time"
 
 // Scenario defines a complete scenario with phases and signal configurations
 type Scenario struct {
-	Name        string                    `yaml:"name"`
-	Description string                    `yaml:"description"`
-	Duration    string                    `yaml:"duration"` // e.g., "8m", "unlimited"
-	DefaultRate string                    `yaml:"default_rate"`
-	Signals     map[string]*SignalConfig  `yaml:"signals"`
-	Phases      []Phase                   `yaml:"phases"`
+	Name        string                   `yaml:"name"`
+	Description string                   `yaml:"description"`
+	Duration    string                   `yaml:"duration"` // e.g., "8m", "unlimited"
+	DefaultRate string                   `yaml:"default_rate"`
+	Signals     map[string]*SignalConfig `yaml:"signals"`
+	Phases      []Phase                  `yaml:"phases"`
 }
 
 // Phase represents a time-bounded stage of a scenario with specific overrides
@@ -27,11 +27,11 @@ type SignalConfig struct {
 	Unit     string      `yaml:"unit,omitempty"`     // e.g., "bpm", "ms"
 
 	// Override modifiers
-	Add              float64 `yaml:"add,omitempty"`
-	Multiply         float64 `yaml:"multiply,omitempty"`
-	Value            string  `yaml:"value,omitempty"` // For discrete values like "on"/"off"
-	Ramp             string  `yaml:"ramp,omitempty"`  // Ramp duration
-	RampToBaseline   string  `yaml:"ramp_to_baseline,omitempty"`
+	Add            float64 `yaml:"add,omitempty"`
+	Multiply       float64 `yaml:"multiply,omitempty"`
+	Value          string  `yaml:"value,omitempty"` // For discrete values like "on"/"off"
+	Ramp           string  `yaml:"ramp,omitempty"`  // Ramp duration
+	RampToBaseline string  `yaml:"ramp_to_baseline,omitempty"`
 }
 
 // ParseDuration parses duration strings like "8m", "30s", "unlimited"
