@@ -2,10 +2,10 @@
 
 **Local HSI Mock Data Generator & Broadcaster for SDK Development**
 
-[![License](https://img.shields.io/github/license/synheart/synheart-cli)](LICENSE)
-[![Go Version](https://img.shields.io/github/go-mod/go-version/synheart/synheart-cli)](go.mod)
-[![CI](https://github.com/synheart/synheart-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/synheart/synheart-cli/actions/workflows/ci.yml)
-[![Latest Release](https://img.shields.io/github/v/release/synheart/synheart-cli)](https://github.com/synheart/synheart-cli/releases)
+[![License](https://img.shields.io/github/license/synheart-ai/synheart-cli)](LICENSE)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/synheart-ai/synheart-cli)](go.mod)
+[![CI](https://github.com/synheart-ai/synheart-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/synheart-ai/synheart-cli/actions/workflows/ci.yml)
+[![Latest Release](https://img.shields.io/github/v/release/synheart-ai/synheart-cli)](https://github.com/synheart-ai/synheart-cli/releases)
 
 Synheart CLI generates HSI-compatible sensor data streams that mimic phone + wearable sources, eliminating dependency on physical devices during development.
 
@@ -31,7 +31,7 @@ Changelog: see [`CHANGELOG.md`](CHANGELOG.md).
 Install the CLI to make it available system-wide:
 
 ```bash
-git clone https://github.com/synheart/synheart-cli
+git clone https://github.com/synheart-ai/synheart-cli
 cd synheart-cli
 make install
 ```
