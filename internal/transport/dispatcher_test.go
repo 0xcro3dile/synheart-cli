@@ -335,4 +335,17 @@ func TestDispatcher_GetDroppedCount(t *testing.T) {
 	// With a buffer of 1 and rapid sends, we should have some drops
 	// (exact count depends on timing, so we just verify it's tracked)
 	t.Logf("Dropped events count: %d", dropped)
+
+	// Drain subscriber channel to ensure test completes properly
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		for range sub {
+		}
+	}()
+	
+	// Wait a bit for draining, then cancel to stop dispatcher
+	time.Sleep(10 * time.Millisecond)
+	cancel()
+	<-done
 }
