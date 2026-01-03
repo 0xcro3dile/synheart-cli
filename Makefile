@@ -54,5 +54,8 @@ install:
 test:
 	go test ./...
 
+test-race:
+	go test -race ./...
+
 clean:
 	rm -rf bin/
