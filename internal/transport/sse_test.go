@@ -165,4 +165,3 @@ func TestSSEServer_PortConflict(t *testing.T) {
 		t.Error("should fail fast")
 	}
 }
-
